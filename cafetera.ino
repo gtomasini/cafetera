@@ -1,5 +1,8 @@
 //cafetera esp32 
-//ver 0.3
+//ver 0.50
+//author: pablo tomasini
+//tester: marcelo spoturno
+
 #include <EEPROM.h>
 #define __ASSERT_USE_STDERR
 #include <assert.h>
@@ -18,8 +21,8 @@ const int H2O_MILK_VLV_OUT   = 5;//orange
 const int H2O_CHOC_VLV_OUT   = 18;//brown
 
 const unsigned long PULSES_TIMEOUT_MSECS = 1000*10;//10 secs
-volatile int pulseConter;
-int services_num;//it must be read from eprom
+volatile unsigned char pulseConter;
+unsigned services_num;//it must be read from eprom
 
 typedef enum {
   READY_ST,
@@ -39,11 +42,11 @@ void __assert(const char *__func, const char *__file, int __lineno, const char *
     Serial.println(__lineno, DEC);
     Serial.println(__sexp);
     Serial.flush();
-    // abort program execution.
-    abort();
+    abort();    // abort program execution.
 }
 
 void turn_off_all_relays (){
+  Serial.println("turning off all outputs (high level)...");
   digitalWrite (PROD_COFFEE_OUT, HIGH);
   digitalWrite (PROD_MILK_OUT, HIGH);
   digitalWrite (PROD_CHOC_OUT, HIGH);
@@ -67,7 +70,6 @@ void setup() {
   pinMode (BUTTON_1_IN, INPUT);
   
   delay(1000);
-  Serial.println ("apago la punetera bomba y todas las salidas!!!!!!");
   turn_off_all_relays ();
   EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
   //this just first time
@@ -83,7 +85,8 @@ void setup() {
 }
 
 void ISRCountPulse(){
-  pulseConter++;
+  static unsigned char _pulse_conter=0;
+  if (++_pulse_conter%2==0)  ++pulseConter;
 }
 
 inline void turn_milk(bool level){
@@ -102,11 +105,14 @@ inline void turn_choc(bool level){
 }
 
 //the core function!!!! no es un carrito de rulemanes!!!
-int preparing_coffee (int milk, int h2o_milk, int coffee, int h2o_coffee, int choc, int h2o_choc){
+int preparing_coffee (unsigned char milk, unsigned char h2o_milk, 
+                  unsigned char coffee, unsigned char h2o_coffee,
+                  unsigned char choc, unsigned char h2o_choc){
   //check if the parameters are ok (preconditions, h2o_xxx>xxx)
-  assert (h2o_milk>=milk);
-  assert (h2o_coffee>=coffee);
-  assert (h2o_choc>=choc);
+  assert (h2o_milk >= milk);
+  assert (h2o_coffee >= coffee);
+  assert (h2o_choc >= choc);
+  assert (milk || coffee || choc);
   
   COFFEE_STS state = READY_ST;//first state
   turn_off_all_relays ();
@@ -126,17 +132,17 @@ int preparing_coffee (int milk, int h2o_milk, int coffee, int h2o_coffee, int ch
   Serial.print (h2o_choc);
   Serial.println (")");
   pulseConter = 0;        //reset pulses counter!!!!!
-  int _last_pulse_conter=0;
+  unsigned char _last_pulse_conter=0;
 
   for(;;){//state machine, infinite loop!!!
     //timeout treatment
     if ((millis()-last_inc_msecs) > PULSES_TIMEOUT_MSECS) {
        Serial.print("ERROR in state ");  
        Serial.print(state);  
-       Serial.println (", no pulses, TIMEOUT!");
+       Serial.println (", no input pulses, TIMEOUT!!!");
        state = NO_WATER_ST;//direct to error state
       _last_pulse_conter = pulseConter;
-       pulseConter = -1;
+       pulseConter = 0;
     }
     else if (pulseConter != _last_pulse_conter){
         last_inc_msecs = millis();//reeset timeout because some pulse arrived
@@ -145,7 +151,7 @@ int preparing_coffee (int milk, int h2o_milk, int coffee, int h2o_coffee, int ch
         
     switch (state){
 
-      case READY_ST:
+      case READY_ST://start state
         Serial.println ("READY_ST state!");
         if (milk>0){
           state = MILK_ST;  //next state!!!
@@ -174,11 +180,22 @@ int preparing_coffee (int milk, int h2o_milk, int coffee, int h2o_coffee, int ch
 
       case MILK_ST:
         if (pulseConter >= h2o_milk){
-          state = COFFEE_ST;//next state
           turn_milk(HIGH);  //turn off milk and h2o
-          turn_coffee(LOW); //turn on coffee and h2o
           Serial.print (pulseConter);
-          Serial.println (" pulses, MILK_ST to COFFEE_ST transition!");
+          if (coffee>0){
+            state = COFFEE_ST;//next state
+            turn_coffee(LOW); //turn on coffee and h2o
+            Serial.println (" pulses, MILK_ST to COFFEE_ST transition!");
+          }
+          else if (choc>0){
+            state = CHOC_ST;//next state
+            turn_choc(LOW); //turn on coffee and h2o
+            Serial.println (" pulses, MILK_ST to CHOC_ST transition!");
+          }
+          else{
+            state = END_ST;
+            Serial.println (" pulses, MILK_ST to END_ST transition!");
+          }
           pulseConter = 0;
         }
         else if (pulseConter >= milk){
@@ -191,15 +208,14 @@ int preparing_coffee (int milk, int h2o_milk, int coffee, int h2o_coffee, int ch
       case COFFEE_ST:
         if (pulseConter >= h2o_coffee){
           turn_coffee(HIGH);  //turn off coffee and h2o
+          Serial.print (pulseConter);
           if (choc>0){
             state = CHOC_ST;
             turn_choc(LOW); //turn on choc and h2o
-            Serial.print (pulseConter);
             Serial.println (" pulses, COFFEE_ST to CHOC_ST transition!");
           }
           else{
             state = END_ST; 
-            Serial.print (pulseConter);
             Serial.println (" pulses, COFFEE_ST to END_ST transition!");
           }
           pulseConter = 0;
@@ -275,6 +291,6 @@ void loop() {
 
   //  capuccino ();  
 
-  //delay(10*1000);
+  delay(10*1000);
   //delay(30*1000);
 }
