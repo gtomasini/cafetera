@@ -1,1 +1,1 @@
-# cafetera for esp32 (vending machine)
+# cafetera implementation using esp32 (vending machine)
