@@ -34,7 +34,7 @@ void __assert(const char *__func, const char *__file, int __lineno, const char *
 class coffee_maker{
   
   typedef enum {
-    READY_ST,
+    IDLE_ST,
     COFFEE_ST,  
     MILK_ST,
     CHOC_ST,
@@ -110,7 +110,7 @@ public:
     assert (h2o_choc >= choc);
     assert (milk || coffee || choc);
     
-    COFFEE_STS state = READY_ST;//first state
+    COFFEE_STS state = IDLE_ST;//first state
     turn_off_all_relays ();
     digitalWrite (PUMP_OUT, LOW);    //TURN ON PUMP
     unsigned long last_inc_msecs = millis();//to timeout
@@ -127,7 +127,7 @@ public:
     Serial.print (", ");
     Serial.print (h2o_choc);
     Serial.println (")");
-    pulseConter = 0;        //reset pulses counter!!!!!
+    pulseConter = 0;  //reset pulses counter!!!!!
     unsigned char _last_pulse_conter=0;
 
     for(;;){
@@ -147,8 +147,9 @@ public:
           
       switch (state){
 
-        case READY_ST://start state
-          Serial.println ("READY_ST state!");
+        case IDLE_ST://start state
+          Serial.print ("READY_ST ");
+          if (pulseConter==0) break;//if not pulses do nothing
           if (milk>0){
             state = MILK_ST;  //next state!!!
             turn_milk(LOW);   //turn on milk and h2o
@@ -318,8 +319,8 @@ void loop() {
   //Serial.print("loop, services_num: ");
   //Serial.println (services_num);
   //Serial.printl (", ");
-  //delay(10*1000);
-  if (digitalRead (BUTTON_1_IN) == LOW)
+  delay(10*1000);
+  //if (digitalRead (BUTTON_1_IN) == LOW)
     cafetera.just_coffee ();
 
   //  capuccino ();  
