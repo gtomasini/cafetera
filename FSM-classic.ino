@@ -1,5 +1,17 @@
 #include <memory>
 
+// just_coffee 
+//  coffee = 20; h2o_coffee = 100;
+
+// cortado
+//  milk = 18; h2o_milk = 30;
+//  coffee = 6; h2o_coffee = 20;
+
+// capuccino
+// milk = 12; h2o_milk = 30;
+//    coffee = 12; h2o_coffee = 30;
+//    choc = 10, h2o_choc = 30;
+
 extern void turn_off_all_relays ();
 volatile unsigned char pulseConter;//global!
 
@@ -59,12 +71,6 @@ struct Idle_St : State {
     turn_off_all_relays ();
     digitalWrite (PUMP_OUT, LOW);    //TURN ON PUMP
 
-    //check if the parameters are ok (preconditions, h2o_xxx>xxx)
-    assert (_h2o_milk >= _milk);
-    assert (_h2o_coffee >= _coffee);
-    assert (_h2o_choc >= _choc);
-    assert (_milk || _coffee || _choc);
->>>>>>> c210b74b7f37f0f1615ad00d4784738fff2c49c6
     _pulseConter = 0;  //reset pulses counter!!!!!
     Serial.print ("Idle ST... ");
     Serial.print (_milk);
@@ -86,7 +92,6 @@ struct Idle_St : State {
 struct Coffee_St : State {
   Coffee_St(){
      Serial.print ("Coffee ST... ");
-<<<<<<< HEAD
      Serial.print (_milk);
      Serial.print (", ");
      Serial.print (_h2o_milk);
@@ -99,8 +104,6 @@ struct Coffee_St : State {
      Serial.print (", ");
      Serial.print (_h2o_choc);
      Serial.println ("");
-=======
->>>>>>> c210b74b7f37f0f1615ad00d4784738fff2c49c6
   }
   std::unique_ptr<State> on_event(event e);
 };
@@ -286,8 +289,8 @@ struct doCoffee {
      
      for(;;){
         //timeout treatment
+        Serial.println(pulseConter);
         if ((millis()-last_inc_msecs) > PULSES_TIMEOUT_MSECS) {
-
           Serial.println ("  pulses, TIMEOUT!!!");
           last_pulse_conter = pulseConter;
           pulseConter = 0;
@@ -296,6 +299,7 @@ struct doCoffee {
         else if (pulseConter != last_pulse_conter){
            last_inc_msecs = millis();//reeset timeout because some pulse arrived
            last_pulse_conter = pulseConter;
+           Serial.println ("  pulses arrived!");
            dispatch (event::pulse);
         }    
         if (_fin) return;
