@@ -59,6 +59,12 @@ struct Idle_St : State {
     turn_off_all_relays ();
     digitalWrite (PUMP_OUT, LOW);    //TURN ON PUMP
 
+    //check if the parameters are ok (preconditions, h2o_xxx>xxx)
+    assert (_h2o_milk >= _milk);
+    assert (_h2o_coffee >= _coffee);
+    assert (_h2o_choc >= _choc);
+    assert (_milk || _coffee || _choc);
+>>>>>>> c210b74b7f37f0f1615ad00d4784738fff2c49c6
     _pulseConter = 0;  //reset pulses counter!!!!!
     Serial.print ("Idle ST... ");
     Serial.print (_milk);
@@ -80,6 +86,7 @@ struct Idle_St : State {
 struct Coffee_St : State {
   Coffee_St(){
      Serial.print ("Coffee ST... ");
+<<<<<<< HEAD
      Serial.print (_milk);
      Serial.print (", ");
      Serial.print (_h2o_milk);
@@ -92,6 +99,8 @@ struct Coffee_St : State {
      Serial.print (", ");
      Serial.print (_h2o_choc);
      Serial.println ("");
+=======
+>>>>>>> c210b74b7f37f0f1615ad00d4784738fff2c49c6
   }
   std::unique_ptr<State> on_event(event e);
 };
@@ -278,6 +287,7 @@ struct doCoffee {
      for(;;){
         //timeout treatment
         if ((millis()-last_inc_msecs) > PULSES_TIMEOUT_MSECS) {
+
           Serial.println ("  pulses, TIMEOUT!!!");
           last_pulse_conter = pulseConter;
           pulseConter = 0;
