@@ -148,30 +148,30 @@ public:
       switch (state){
 
         case IDLE_ST://start state
-          Serial.print ("READY_ST ");
+          Serial.print ("IDLE_ST ");
           if (pulseConter==0) break;//if not pulses do nothing
           if (milk>0){
             state = MILK_ST;  //next state!!!
             turn_milk(LOW);   //turn on milk and h2o
             Serial.print (pulseConter);
-            Serial.println (" pulses, READY_ST to MILK_ST transition!");
+            Serial.println (" pulses, IDLE_ST to MILK_ST transition!");
           }
           else if (coffee>0){
             state = COFFEE_ST;//next state!!!
             turn_coffee(LOW); //turn on coffee and h2o
             Serial.print (pulseConter);
-            Serial.println (" pulses, READY_ST to COFFEE_ST transition!");
+            Serial.println (" pulses, IDLE_ST to COFFEE_ST transition!");
           }
           else if (choc>0){
               state = CHOC_ST;
               turn_choc(LOW); //turn on choc and h2o
               Serial.print (pulseConter);
-              Serial.println (" pulses, READY_ST to CHOC_ST transition!");          
+              Serial.println (" pulses, IDLE_ST to CHOC_ST transition!");          
           }
           else{
               state = ERROR_ST;
               Serial.print (pulseConter);
-              Serial.println (" pulses, READY_ST to ERROR_ST transition!");          
+              Serial.println (" pulses, IDLE_ST to ERROR_ST transition!");          
           }
           break;
 
@@ -307,8 +307,6 @@ void setup() {
   Serial.begin(115200);
   Serial.println("setup...");
   
-
-
   coffee_maker::init();
 }
 
