@@ -41,7 +41,7 @@ class coffee_maker{
     END_ST,
     NO_WATER_ST,
     ERROR_ST
-  } COFFEE_STS;
+  } COFFEE_STs;
 
   const unsigned long PULSES_TIMEOUT_MSECS = 1000*10;//10 secs
 
@@ -110,7 +110,7 @@ public:
     assert (h2o_choc >= choc);
     assert (milk || coffee || choc);
     
-    COFFEE_STS state = IDLE_ST;//first state
+    COFFEE_STs state = IDLE_ST;//first state
     turn_off_all_relays ();
     digitalWrite (PUMP_OUT, LOW);    //TURN ON PUMP
     unsigned long last_inc_msecs = millis();//to timeout
