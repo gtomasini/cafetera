@@ -1,19 +1,20 @@
 #include <memory>
 
+// pulses parameters
+
 // just_coffee 
-//  coffee = 20; h2o_coffee = 100;
+// coffee = 20; h2o_coffee = 100;
 
 // cortado
 //  milk = 18; h2o_milk = 30;
 //  coffee = 6; h2o_coffee = 20;
 
-// capuccino
+// capuccino 
 // milk = 12; h2o_milk = 30;
-//    coffee = 12; h2o_coffee = 30;
-//    choc = 10, h2o_choc = 30;
+// coffee = 12; h2o_coffee = 30;
+// choc = 10, h2o_choc = 30;
 
 extern void turn_off_all_relays ();
-volatile unsigned char pulseConter;//global!
 
 const unsigned long PULSES_TIMEOUT_MSECS = 1000*10;//10 secs
 //FSM Classic Design pattern implementation
@@ -25,7 +26,8 @@ enum event { pulse, timeout };
 struct State {
   State():_milk(0), _h2o_milk(0), 
           _coffee(0), _h2o_coffee(0),
-          _choc(0), _h2o_choc(0), _pulseConter(0), _fin(false){};
+          _choc(0), _h2o_choc(0), 
+          _pulseConter(0), _fin(false){};
           
   virtual std::unique_ptr<State> on_event(event e) = 0;
 
@@ -37,11 +39,27 @@ struct State {
     _milk=milk; _h2o_milk=h2o;
   }
   void setCoffee (unsigned char coffee, unsigned char h2o){
-    _coffee=coffee; _h2o_milk=h2o;
+    _coffee=coffee; _h2o_coffee=h2o;
   }
 
   void setChoc (unsigned char choc, unsigned char h2o){
-    _choc=choc; _h2o_milk=h2o;
+    _choc=choc; _h2o_choc=h2o;
+  }
+
+  void printParameters(){
+    Serial.print ("coffee parameters: ");
+    Serial.print (_milk);
+    Serial.print (", ");
+    Serial.print (_h2o_milk);
+    Serial.print (", ");
+    Serial.print (_coffee);
+    Serial.print (", ");
+    Serial.print (_h2o_coffee);
+    Serial.print (", ");
+    Serial.print (_choc);
+    Serial.print (", ");
+    Serial.print (_h2o_choc);
+    Serial.println (".");
   }
 
 protected:
@@ -69,22 +87,11 @@ protected:
 struct Idle_St : State {
   Idle_St(){
     turn_off_all_relays ();
-    digitalWrite (PUMP_OUT, LOW);    //TURN ON PUMP
+    digitalWrite (PUMP_OUT, LOW);//TURN ON PUMP
 
     _pulseConter = 0;  //reset pulses counter!!!!!
     Serial.print ("Idle ST... ");
-    Serial.print (_milk);
-    Serial.print (", ");
-    Serial.print (_h2o_milk);
-    Serial.print (", ");
-    Serial.print (_coffee);
-    Serial.print (", ");
-    Serial.print (_h2o_coffee);
-    Serial.print (", ");
-    Serial.print (_choc);
-    Serial.print (", ");
-    Serial.print (_h2o_choc);
-    Serial.println ("");
+    printParameters();
   }
   std::unique_ptr<State> on_event(event e);
 };
@@ -92,18 +99,7 @@ struct Idle_St : State {
 struct Coffee_St : State {
   Coffee_St(){
      Serial.print ("Coffee ST... ");
-     Serial.print (_milk);
-     Serial.print (", ");
-     Serial.print (_h2o_milk);
-     Serial.print (", ");
-     Serial.print (_coffee);
-     Serial.print (", ");
-     Serial.print (_h2o_coffee);
-     Serial.print (", ");
-     Serial.print (_choc);
-     Serial.print (", ");
-     Serial.print (_h2o_choc);
-     Serial.println ("");
+     printParameters();
   }
   std::unique_ptr<State> on_event(event e);
 };
@@ -141,6 +137,7 @@ struct Error_St : State {
 };
 
 std::unique_ptr<State> Idle_St::on_event(event e) {
+  Serial.println("Idle_St::on_event");
   if (event::timeout){
       Serial.println (" pulses, timeout, transition to ERROR_ST.");   
       return std::make_unique<Error_St>();     
@@ -183,7 +180,7 @@ std::unique_ptr<State> Milk_St::on_event(event e){
       return std::make_unique<Coffee_St>();
     }
     else if (_choc>0){
-      turn_choc(LOW); //turn on coffee and h2o
+      turn_choc(LOW); //turn on choc and h2o
       Serial.println (" pulses, MILK_ST to CHOC_ST transition!");
       _pulseConter = 0;
       return std::make_unique<Choc_St>();
@@ -270,9 +267,10 @@ struct doCoffee {
    std::unique_ptr<State> m_curr_state;
    bool _fin;
 
-   doCoffee():_fin(false){
-      m_curr_state = std::make_unique<Idle_St>();
-      m_curr_state->setCoffee(20, 100);
+   doCoffee():_fin(false),m_curr_state(std::make_unique<Idle_St>()){
+      Serial.println("doCoffee constructor");
+      m_curr_state->setCoffee(5, 15);
+      m_curr_state->printParameters();
    }
    
    void dispatch(event e) {
@@ -284,22 +282,19 @@ struct doCoffee {
    }
 
    void doit(){
-     unsigned char last_pulse_conter=pulseConter;
      unsigned long last_inc_msecs = millis();//to timeout
      
      for(;;){
         //timeout treatment
-        Serial.println(pulseConter);
+        Serial.print(pulseConter::getPulses());
+        Serial.print(", ");
         if ((millis()-last_inc_msecs) > PULSES_TIMEOUT_MSECS) {
-          Serial.println ("  pulses, TIMEOUT!!!");
-          last_pulse_conter = pulseConter;
-          pulseConter = 0;
+          Serial.println("\npulse TIMEOUT!!!");
           dispatch (event::timeout);
         }
-        else if (pulseConter != last_pulse_conter){
-           last_inc_msecs = millis();//reeset timeout because some pulse arrived
-           last_pulse_conter = pulseConter;
-           Serial.println ("  pulses arrived!");
+        else if (pulseConter::getPulseArrived()){
+           last_inc_msecs = millis();//reset timeout because some pulse arrived
+           Serial.println("\npulse arrived (event)!");
            dispatch (event::pulse);
         }    
         if (_fin) return;

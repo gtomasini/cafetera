@@ -42,19 +42,32 @@ void turn_off_all_relays (){
   digitalWrite (H2O_CHOC_VLV_OUT, HIGH);
 } 
 
-extern volatile unsigned char pulseConter;//global!
- 
-void ISRCountPulse(){
-  static unsigned char _pulse_conter=0;
-  
-  //if (++_pulse_conter%2==0)  
-    ++pulseConter;
-}
- 
+struct pulseConter{
+  static void ISRCountPulse(){
+    static unsigned char _total_conter=0;
+      if (++_total_conter%2==0)  
+        ++_conter;
+      _pulse_arrived = true;
+  }
 
+  static unsigned char getPulses(){
+      return _conter;
+  }
+
+  static bool getPulseArrived(){
+    bool st=_pulse_arrived;
+    _pulse_arrived = false;
+    return st;
+  }
+  
+private:
+  static volatile unsigned char _conter;
+  static bool _pulse_arrived;
+};
+ 
 void init(){
   //enable IRQ for input pulses from sensor
-  attachInterrupt (digitalPinToInterrupt(0), ISRCountPulse, RISING);
+  attachInterrupt (digitalPinToInterrupt(0), pulseConter::ISRCountPulse, RISING);
 
   pinMode (PROD_COFFEE_OUT, OUTPUT);
   pinMode (PROD_MILK_OUT, OUTPUT);
@@ -68,7 +81,7 @@ void init(){
   
   delay(1000);
   turn_off_all_relays ();
-  pulseConter = 0;//global!
+
   EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
   //this just first time
   //EEPROM.write(0, 0);
