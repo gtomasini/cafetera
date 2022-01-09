@@ -66,7 +66,7 @@ void setup() {
   Serial.println("setup...");
 
   //enable IRQ for pulses
-  attachInterrupt (digitalPinToInterrupt(PULSE_IN), CoffeeMakerFSM::ISRCountPulse, RISING);
+  attachInterrupt (digitalPinToInterrupt(0), CoffeeMakerFSM::ISRCountPulse, RISING);
 
   pinMode (PROD_COFFEE_OUT, OUTPUT);
   pinMode (PROD_MILK_OUT, OUTPUT);
@@ -98,12 +98,12 @@ void loop() {
   //Serial.print("loop, services_num: ");
   //Serial.println (services_num);
   //Serial.printl (", ");
-  delay(10*1000);
-  //if (digitalRead (BUTTON_1_IN) == LOW)
+  //delay(10*1000);
+  if (digitalRead (BUTTON_1_IN) == LOW)
     cafetera.justCoffee ();
 
   //  capuccino ();  
 
-  delay(10*1000);
+  //delay(10*1000);
   //delay(30*1000);
 }
