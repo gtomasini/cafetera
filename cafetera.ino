@@ -32,18 +32,18 @@ void __assert(const char *__func, const char *__file, int __lineno, const char *
     abort();    // abort program execution.
 }
 
-//auxiliar functions, LOW is ON!
+//auxiliar functions to turn on or off, LOW is ON!
 inline void turn_milk(bool level){
   digitalWrite (PROD_MILK_OUT, level);    //TURN ON/off MILK
   digitalWrite (H2O_MILK_VLV_OUT, level); //TURN ON/off H2O-MILK
 }
 
-inline void turn_coffee(bool level){
+inline void turn_coffee (bool level){
   digitalWrite (PROD_COFFEE_OUT, level);  //turn on/off Coffee
   digitalWrite (H2O_COFFEE_VLV_OUT, level);//turn on/off h2o-coffee
 }
 
-inline void turn_choc(bool level){
+inline void turn_choc (bool level){
   digitalWrite (PROD_CHOC_OUT, LOW);      //turn on/off choc
   digitalWrite (H2O_CHOC_VLV_OUT, LOW);   //turn on/off h2-o choc
 }
@@ -59,10 +59,13 @@ void turn_off_all_relays (){
   digitalWrite (H2O_CHOC_VLV_OUT, HIGH);
 } 
 
-unsigned CoffeeMakerFSM::services_num;//it must be read from eprom               
+unsigned CoffeeMakerFSM::services_num;//it must be read from eeprom               
 
-void setup() {
+
+void setup () {
   Serial.begin(115200);
+  while (!Serial); // wait for serial port to connect. Needed for native USB port only
+
   Serial.println("setup...");
 
   //enable IRQ for pulses
@@ -78,7 +81,7 @@ void setup() {
   pinMode (PULSE_IN, INPUT);
   pinMode (BUTTON_1_IN, INPUT);
   
-  delay(1000);
+  delay (1000);
   turn_off_all_relays ();
 
   EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
