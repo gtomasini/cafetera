@@ -32,6 +32,34 @@ void __assert(const char *__func, const char *__file, int __lineno, const char *
     abort();    // abort program execution.
 }
 
+void  writeEEPROM(){
+  Serial.println("writeEEPROM()");
+  float f = 123.456f;  //Variable to store in EEPROM.
+  int eeAddress = 0;   //Location we want the data to be put.
+
+  //One simple call, with the address first and the object second.
+  EEPROM.put(eeAddress, f);
+  
+  eeAddress += sizeof(float); //Move address to the next byte after float 'f'.
+
+  //EEPROM.put(eeAddress, customVar);
+  delay(100);
+}
+
+void readEEPROM (){
+  float f = 0.00f;   //Variable to store data read from EEPROM.
+  int eeAddress = 0; //EEPROM address to start reading from
+
+  Serial.print( "Read float from EEPROM: " );
+
+  //Get the float data from the EEPROM at position 'eeAddress'
+  EEPROM.get( eeAddress, f );
+  Serial.println(f, 3 );  //This may print 'ovf, nan' if the data inside the EEPROM is not a valid float.
+
+  // get() can be used with custom structures too.
+  eeAddress += sizeof (float); //Move address to the next byte after float 'f'.
+}
+
 //auxiliar functions to turn on or off, LOW is ON!
 inline void turn_milk(bool level){
   digitalWrite (PROD_MILK_OUT, level);    //TURN ON/off MILK
@@ -85,9 +113,7 @@ void setup () {
   turn_off_all_relays ();
 
   EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
-  //this just first time
-  //EEPROM.write(0, 0);
-  //EEPROM.commit();
+
   //delay (5000);
   CoffeeMakerFSM::services_num = EEPROM.read(0);
   Serial.print ("*** services num: ");
