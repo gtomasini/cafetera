@@ -1,6 +1,14 @@
 //fsm implementatation
 #include "fsm.h"
 
+CoffeePlParms coffeePars[]={
+  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//milk
+  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//cortado
+  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//cafe
+  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//capu
+  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)) //choc
+};
+
 volatile uint8_t CoffeeMakerFSM::plConter;
 
 void CoffeeMakerFSM::ISRCountPulse(){

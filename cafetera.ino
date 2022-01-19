@@ -8,7 +8,7 @@
 #include <assert.h>
 #include "fsm.h"
 
-#define EEPROM_SIZE 5
+#define EEPROM_SIZE 32
 
 const int BUTTON_1_IN = 12;
 const int PULSE_IN = 13;
@@ -32,6 +32,7 @@ void __assert(const char *__func, const char *__file, int __lineno, const char *
     abort();    // abort program execution.
 }
 
+//TODO
 void  writeEEPROM(){
   Serial.println("writeEEPROM()");
   float f = 123.456f;  //Variable to store in EEPROM.
@@ -46,6 +47,7 @@ void  writeEEPROM(){
   delay(100);
 }
 
+//TODO
 void readEEPROM (){
   float f = 0.00f;   //Variable to store data read from EEPROM.
   int eeAddress = 0; //EEPROM address to start reading from
