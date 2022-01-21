@@ -1,12 +1,20 @@
 //fsm implementatation
 #include "fsm.h"
 
+//Pulse parameters for each kind of coffee
+//                leche       cafe      choc
+//cafe(1):       (0, 0), (20, 100),   (0, 0)  
+//cortado(2):    (5,20),  (18, 80),   (0, 0)
+//cafeleche(3):  (12,50), (14, 50),   (0, 0)
+//capuccino(4):  (10,40), (12, 30), (18, 30)
+//chocolate(5):  (0, 0),    (0, 0),(60. 100)
+
 CoffeePlParms coffeePars[]={
-  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//milk
-  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//cortado
-  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//cafe
-  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)),//capu
-  CoffeePlParms(std::make_pair(10,10), std::make_pair(0,0), std::make_pair(0,0)) //choc
+  CoffeePlParms (std::make_pair (0, 0), std::make_pair (20, 100), std::make_pair (0, 0)),//0. cafe
+  CoffeePlParms (std::make_pair (5, 20), std::make_pair (18, 80), std::make_pair (0, 0)),//1. cortado
+  CoffeePlParms (std::make_pair (10, 10), std::make_pair (14, 50), std::make_pair (0, 0)), //2. cafemilk
+  CoffeePlParms (std::make_pair (10, 40), std::make_pair (12, 30), std::make_pair (18, 30)),//3. capu
+  CoffeePlParms (std::make_pair (0, 0), std::make_pair (0, 0), std::make_pair (60, 100)) //4. choco
 };
 
 volatile uint8_t CoffeeMakerFSM::plConter;
@@ -16,17 +24,30 @@ void CoffeeMakerFSM::ISRCountPulse(){
     if (++_plConterTotal%2==0)  ++plConter;
 }
 
-void CoffeePlParms::check(){
+bool CoffeePlParms::checkPars(){
     //check if the parameters are ok (preconditions, h2o_xxx>xxx)
-    assert (milk.second >= milk.first);
-    assert (coffee.second >= coffee.first);
-    assert (choc.second >= choc.first);
-    assert (milk.first || coffee.first || choc.first);
+    if (milk.second < milk.first){
+      Serial.println ("milk-h2o pulses conf error!!!");  
+      return false;
+    }
+    if (coffee.second < coffee.first){
+      Serial.println ("coffee-h2o pulses conf error!!!");  
+      return false;
+    }
+    if (choc.second >= choc.first){
+      Serial.println ("choco-h2o pulses conf error!!!");  
+      return false;
+    }
+    if  (!(milk.first || coffee.first || choc.first)){
+      Serial.println ("not milk, not coffee neither choc pulses conf error!!!");  
+      return false;
+    }
+    return true;
 }
 
 void CoffeePlParms::print(){
     Serial.print ("preparing_cofee (");
-    Serial.print (milk.first);
+    Serial.print (milk.first);  
     Serial.print (", ");
     Serial.print (milk.second);
     Serial.print (", ");
@@ -41,7 +62,8 @@ void CoffeePlParms::print(){
 }
 
 int CoffeeMakerFSM::prepareCoffee (){
-    parms.check();    
+    if (parms.checkPars() == false) return -1;
+        
     parms.print();
     COFFEE_STs state = IDLE_ST;//first state
     turn_off_all_relays ();
@@ -180,27 +202,19 @@ int CoffeeMakerFSM::prepareCoffee (){
 }
 
 int CoffeeMakerFSM::justCoffee (){
-  parms.milk = std::make_pair(0, 0);
-  parms.coffee = std::make_pair(4, 10);
-  parms.choc = std::make_pair( 0, 0);
+  parms = coffeePars[static_cast<int>(CoffeeType::cafe)];
   Serial.println ("*** calling for a cafe ***");
   return prepareCoffee ();  
 }
 
 int CoffeeMakerFSM::cortado (){
-   parms.milk = std::make_pair(18, 30);
-   parms.coffee = std::make_pair(6, 20);
-   parms.choc = std::make_pair( 0, 0);
-
+   parms = coffeePars[static_cast<int>(CoffeeType::cortado)];
    Serial.println ("*** calling for a cortado ***");
    return prepareCoffee ();
 }
 
 int CoffeeMakerFSM::capuccino(){
-   parms.milk = std::make_pair(12, 30);
-   parms.coffee = std::make_pair(12, 30);
-   parms.choc = std::make_pair(10, 30);
-   
+   parms = coffeePars[static_cast<int>(CoffeeType::capu)];
    Serial.println ("*** calling for a capuccino ***");
    return prepareCoffee ();
 }

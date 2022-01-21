@@ -2,36 +2,38 @@
 #ifndef FSM_H
 #define FSM_H
 #include <utility> 
+#define __ASSERT_USE_STDERR
+#include <assert.h>
 
-enum class CoffeeType {milk, cortado, cafe, capu, choc};
-
+enum class CoffeeType {cafe=0, cortado=1, cofmilk=2, capu=3, choc=4, end=5};
+  
 using coff_pair=std::pair<uint8_t, uint8_t>;
 
 //pulse parameters
 struct CoffeePlParms {
   CoffeePlParms(){
-    milk = std::make_pair(0,0);
+    milk   = std::make_pair(0,0);
     coffee = std::make_pair(0,0);
-    choc = std::make_pair(0,0);
+    choc   = std::make_pair(0,0);
   }
 
-  CoffeePlParms(coff_pair mi, coff_pair co, coff_pair ch){
-    milk = std::make_pair (mi.first, mi.second);
-    coffee = std::make_pair (co.first, co.second);
-    choc = std::make_pair (ch.first, ch.second);
+  CoffeePlParms(coff_pair mi, coff_pair cof, coff_pair choc){
+    milk   = std::make_pair (mi.first/2, mi.second/2);
+    coffee = std::make_pair (cof.first/2, cof.second/2);
+    choc   = std::make_pair (choc.first/2, choc.second/2);
+    checkPars();
   }
 
-  void check();
+  bool checkPars();
   void print();
   //first parameter is product pulses, second parameter is h2o pulses
-  coff_pair milk;
-  coff_pair coffee;
-  coff_pair choc;
+  coff_pair milk, coffee, choc;
 };
 
 extern CoffeePlParms coffeePars[];
 
 class CoffeeMakerFSM {
+  
   typedef enum {
     IDLE_ST,
     COFFEE_ST,  
@@ -48,7 +50,7 @@ class CoffeeMakerFSM {
   static volatile unsigned char plConter; 
 
 public:
-  static unsigned services_num;//it must be read from eprom 
+  static unsigned services_num;//it must be read from eeprom (sporturno's dixit)
   CoffeeMakerFSM(){};
   static void ISRCountPulse();
     
@@ -58,5 +60,16 @@ public:
   int cortado ();
   int capuccino();
 };
+
+// handle diagnostic informations given by assertion and abort program execution:
+inline void __assert(const char *__func, const char *__file, int __lineno, const char *__sexp) {
+    // transmit diagnostic informations through serial link. 
+    Serial.println(__func);
+    Serial.println(__file);
+    Serial.println(__lineno, DEC);
+    Serial.println(__sexp);
+    Serial.flush();
+    abort();    // abort program execution.
+}
 
 #endif

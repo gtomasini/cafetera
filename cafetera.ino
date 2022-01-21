@@ -4,8 +4,6 @@
 //tester/itegrator: marcelo spoturno 
 
 #include <EEPROM.h>
-#define __ASSERT_USE_STDERR
-#include <assert.h>
 #include "fsm.h"
 
 #define EEPROM_SIZE 32
@@ -21,45 +19,24 @@ const int H2O_COFFEE_VLV_OUT = 4;//yelow
 const int H2O_MILK_VLV_OUT   = 5;//orange
 const int H2O_CHOC_VLV_OUT   = 18;//brown
 
-// handle diagnostic informations given by assertion and abort program execution:
-void __assert(const char *__func, const char *__file, int __lineno, const char *__sexp) {
-    // transmit diagnostic informations through serial link. 
-    Serial.println(__func);
-    Serial.println(__file);
-    Serial.println(__lineno, DEC);
-    Serial.println(__sexp);
-    Serial.flush();
-    abort();    // abort program execution.
-}
 
-//TODO
 void  writeEEPROM(){
-  Serial.println("writeEEPROM()");
-  float f = 123.456f;  //Variable to store in EEPROM.
-  int eeAddress = 0;   //Location we want the data to be put.
-
-  //One simple call, with the address first and the object second.
-  EEPROM.put(eeAddress, f);
-  
-  eeAddress += sizeof(float); //Move address to the next byte after float 'f'.
-
-  //EEPROM.put(eeAddress, customVar);
+  Serial.println ("writeEEPROM()");
+  int eeAddress = 0;   //offset we want the data to be put.
+  for (int i=0; i< static_cast<int>(CoffeeType::end); ++i){
+      EEPROM.put (eeAddress, coffeePars[i]);
+      eeAddress += sizeof (coffeePars[0]);
+  }
   delay(100);
 }
 
-//TODO
 void readEEPROM (){
-  float f = 0.00f;   //Variable to store data read from EEPROM.
-  int eeAddress = 0; //EEPROM address to start reading from
-
-  Serial.print( "Read float from EEPROM: " );
-
-  //Get the float data from the EEPROM at position 'eeAddress'
-  EEPROM.get( eeAddress, f );
-  Serial.println(f, 3 );  //This may print 'ovf, nan' if the data inside the EEPROM is not a valid float.
-
-  // get() can be used with custom structures too.
-  eeAddress += sizeof (float); //Move address to the next byte after float 'f'.
+  Serial.println ( "readEEPROM()" );
+  int eeAddress = 0; //EEPROM offset to start reading from
+  for (int i=0; i < static_cast<int>(CoffeeType::end); ++i){
+      EEPROM.get (eeAddress, coffeePars[i]);
+      eeAddress += sizeof (coffeePars[0]);
+  }
 }
 
 //auxiliar functions to turn on or off, LOW is ON!
