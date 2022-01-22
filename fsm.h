@@ -5,11 +5,40 @@
 #define __ASSERT_USE_STDERR
 #include <assert.h>
 
+#define EEPROM_SIZE 32
+
+#define   BUTTON_1_IN   12
+#define   PULSE_IN      13
+
+#define   PROD_COFFEE_OUT     15//red
+#define   PROD_MILK_OUT       16//white
+#define   PROD_CHOC_OUT       19//blue
+#define   PUMP_OUT            2//green
+#define   H2O_COFFEE_VLV_OUT  4//yelow
+#define   H2O_MILK_VLV_OUT    5//orange
+#define   H2O_CHOC_VLV_OUT    18//brown
+
 enum class CoffeeType {cafe=0, cortado=1, cofmilk=2, capu=3, choc=4, end=5};
   
-using coff_pair=std::pair<uint8_t, uint8_t>;
+using coff_pair=std::pair<uint8_t, uint8_t>;//first parameter is product pulses, second parameter is h2o pulses
 
-//pulse parameters
+//auxiliar functions to turn on or off, LOW is ON!
+inline void turn_milk(bool level){
+  digitalWrite (PROD_MILK_OUT, level);    //TURN ON/off MILK
+  digitalWrite (H2O_MILK_VLV_OUT, level); //TURN ON/off H2O-MILK
+}
+
+inline void turn_coffee (bool level){
+  digitalWrite (PROD_COFFEE_OUT, level);  //turn on/off Coffee
+  digitalWrite (H2O_COFFEE_VLV_OUT, level);//turn on/off h2o-coffee
+}
+
+inline void turn_choc (bool level){
+  digitalWrite (PROD_CHOC_OUT, LOW);      //turn on/off choc
+  digitalWrite (H2O_CHOC_VLV_OUT, LOW);   //turn on/off h2-o choc
+}
+
+//pulse Configuration
 struct CoffeePlParms {
   CoffeePlParms(){
     milk   = std::make_pair(0,0);
@@ -25,8 +54,8 @@ struct CoffeePlParms {
   }
 
   bool checkPars();
-  void print();
-  //first parameter is product pulses, second parameter is h2o pulses
+  void printConf();//print configuration
+  
   coff_pair milk, coffee, choc;
 };
 

@@ -1,58 +1,32 @@
 //cafetera esp32 
-//ver 0.60
+//ver 0.70
 //author: pablo tomasini
 //tester/itegrator: marcelo spoturno 
 
 #include <EEPROM.h>
 #include "fsm.h"
 
-#define EEPROM_SIZE 32
-
-const int BUTTON_1_IN = 12;
-const int PULSE_IN = 13;
-
-const int PROD_COFFEE_OUT    = 15;//red
-const int PROD_MILK_OUT      = 16;//white
-const int PROD_CHOC_OUT      = 19;//blue
-const int PUMP_OUT           = 2;//green
-const int H2O_COFFEE_VLV_OUT = 4;//yelow
-const int H2O_MILK_VLV_OUT   = 5;//orange
-const int H2O_CHOC_VLV_OUT   = 18;//brown
-
-
-void  writeEEPROM(){
-  Serial.println ("writeEEPROM()");
+void  writeConf2EEPROM(){
+  EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
+  Serial.println (__PRETTY_FUNCTION__);
   int eeAddress = 0;   //offset we want the data to be put.
   for (int i=0; i< static_cast<int>(CoffeeType::end); ++i){
       EEPROM.put (eeAddress, coffeePars[i]);
       eeAddress += sizeof (coffeePars[0]);
   }
+  EEPROM.put (eeAddress, CoffeeMakerFSM::services_num);
   delay(100);
 }
 
-void readEEPROM (){
-  Serial.println ( "readEEPROM()" );
+void readConfFromEEPROM (){
+  Serial.println ( "__PRETTY_FUNCTION__" );
   int eeAddress = 0; //EEPROM offset to start reading from
   for (int i=0; i < static_cast<int>(CoffeeType::end); ++i){
       EEPROM.get (eeAddress, coffeePars[i]);
       eeAddress += sizeof (coffeePars[0]);
+      coffeePars[i].printConf();
   }
-}
-
-//auxiliar functions to turn on or off, LOW is ON!
-inline void turn_milk(bool level){
-  digitalWrite (PROD_MILK_OUT, level);    //TURN ON/off MILK
-  digitalWrite (H2O_MILK_VLV_OUT, level); //TURN ON/off H2O-MILK
-}
-
-inline void turn_coffee (bool level){
-  digitalWrite (PROD_COFFEE_OUT, level);  //turn on/off Coffee
-  digitalWrite (H2O_COFFEE_VLV_OUT, level);//turn on/off h2o-coffee
-}
-
-inline void turn_choc (bool level){
-  digitalWrite (PROD_CHOC_OUT, LOW);      //turn on/off choc
-  digitalWrite (H2O_CHOC_VLV_OUT, LOW);   //turn on/off h2-o choc
+  EEPROM.get (eeAddress, CoffeeMakerFSM::services_num);
 }
 
 void turn_off_all_relays (){
@@ -68,12 +42,11 @@ void turn_off_all_relays (){
 
 unsigned CoffeeMakerFSM::services_num;//it must be read from eeprom               
 
-
 void setup () {
   Serial.begin(115200);
   while (!Serial); // wait for serial port to connect. Needed for native USB port only
 
-  Serial.println("setup...");
+  Serial.println("__PRETTY_FUNCTION__");
 
   //enable IRQ for pulses
   attachInterrupt (digitalPinToInterrupt(0), CoffeeMakerFSM::ISRCountPulse, RISING);
@@ -87,14 +60,15 @@ void setup () {
   pinMode (H2O_CHOC_VLV_OUT, OUTPUT);
   pinMode (PULSE_IN, INPUT);
   pinMode (BUTTON_1_IN, INPUT);
-  
+ 
   delay (1000);
   turn_off_all_relays ();
 
-  EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
-
-  //delay (5000);
-  CoffeeMakerFSM::services_num = EEPROM.read(0);
+  delay (1000);
+  
+  //writeConf2EEPROM();//just the first time or after reconfiguration
+  delay (1000);
+  readConfFromEEPROM();
   Serial.print ("*** services num: ");
   Serial.println (CoffeeMakerFSM::services_num);
 }
@@ -107,11 +81,7 @@ void loop() {
   //Serial.println (services_num);
   //Serial.printl (", ");
   //delay(10*1000);
-  if (digitalRead (BUTTON_1_IN) == LOW)
-    cafetera.justCoffee ();
-
-  //  capuccino ();  
+  if (digitalRead (BUTTON_1_IN) == LOW)   cafetera.justCoffee ();
 
   //delay(10*1000);
-  //delay(30*1000);
 }

@@ -45,8 +45,8 @@ bool CoffeePlParms::checkPars(){
     return true;
 }
 
-void CoffeePlParms::print(){
-    Serial.print ("preparing_cofee (");
+void CoffeePlParms::printConf(){
+    Serial.println ("Coffee configuration (milk,coffee, choc):");
     Serial.print (milk.first);  
     Serial.print (", ");
     Serial.print (milk.second);
@@ -57,14 +57,14 @@ void CoffeePlParms::print(){
     Serial.print (", ");
     Serial.print (choc.first);
     Serial.print (", ");
-    Serial.print (choc.second);
-    Serial.println (")");
+    Serial.println (choc.second);
 }
 
 int CoffeeMakerFSM::prepareCoffee (){
+    Serial.println(__PRETTY_FUNCTION__);  
     if (parms.checkPars() == false) return -1;
         
-    parms.print();
+    parms.printConf();
     COFFEE_STs state = IDLE_ST;//first state
     turn_off_all_relays ();
     digitalWrite (PUMP_OUT, LOW); //TURN ON PUMP
