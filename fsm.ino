@@ -31,7 +31,7 @@ bool CoffeePlParms::checkPars(){
 }
 
 void CoffeePlParms::printConf(){
-    Serial.println ("Coffee configuration (milk,coffee, choc):");
+    Serial.print ("Coffee Conf. (milk, coffee, choc): ");
     Serial.print (milk.first);  
     Serial.print (", ");
     Serial.print (milk.second);

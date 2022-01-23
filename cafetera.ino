@@ -104,17 +104,29 @@ void setup () {
   readConfFromEEPROM();
   Serial.print ("*** services num: ");
   Serial.println (CoffeeMakerFSM::services_num);
+  Serial.println("pulse algun boton para cafe...");
 }
 
 void loop() {
-  Serial.println("pulse algun boton");
-  turn_off_all_relays ();//apago todo!!!!!!
+  //turn_off_all_relays ();//apago todo!!!!!!
+  static String serialBuffer;
+  String cmd="";
+  if (Serial.available()) {
+    char c=Serial.read();
+    if (c=='\n' || c=='\r' || c==';'){
+        cmd=serialBuffer;
+        serialBuffer="";
+        Serial.print("***** cmd received: ");
+        Serial.println(cmd);
+        //TODO: parse command here
+    }
+    else serialBuffer.concat(c);
+  }
 
   CoffeeMakerFSM cafetera;
   //Serial.print("loop, services_num: ");
   //Serial.println (services_num);
   //Serial.printl (", ");
-  if (digitalRead (BUTTON_1_IN) == LOW)   cafetera.justCoffee ();
-
-  delay(10*1000);
+  if (digitalRead (BUTTON_1_IN) == LOW || cmd.equals("cafe") )   cafetera.justCoffee ();
+  delay(1*1000);
 }

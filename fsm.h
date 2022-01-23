@@ -38,10 +38,7 @@ inline void turn_choc (bool level){
 
 //pulse Configuration
 struct CoffeePlParms {
-  CoffeePlParms(){
-    milk   = std::make_pair(0,0);
-    coffee = std::make_pair(0,0);
-    choco  = std::make_pair(0,0);
+  CoffeePlParms():milk(std::make_pair(0,0)),coffee(std::make_pair(0,0)),choco(std::make_pair(0,0)){
   }
 
   CoffeePlParms (coff_pair mi, coff_pair cof, coff_pair choc):
