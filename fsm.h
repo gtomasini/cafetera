@@ -5,8 +5,6 @@
 #define __ASSERT_USE_STDERR
 #include <assert.h>
 
-#define EEPROM_SIZE 32
-
 #define   BUTTON_1_IN   12
 #define   PULSE_IN      13
 
@@ -43,20 +41,18 @@ struct CoffeePlParms {
   CoffeePlParms(){
     milk   = std::make_pair(0,0);
     coffee = std::make_pair(0,0);
-    choc   = std::make_pair(0,0);
+    choco  = std::make_pair(0,0);
   }
 
-  CoffeePlParms(coff_pair mi, coff_pair cof, coff_pair choc){
-    milk   = std::make_pair (mi.first/2, mi.second/2);
-    coffee = std::make_pair (cof.first/2, cof.second/2);
-    choc   = std::make_pair (choc.first/2, choc.second/2);
+  CoffeePlParms (coff_pair mi, coff_pair cof, coff_pair choc):
+    milk(mi), coffee(cof), choco(choc){    
     checkPars();
   }
 
   bool checkPars();
   void printConf();//print configuration
   
-  coff_pair milk, coffee, choc;
+  coff_pair milk, coffee, choco;
 };
 
 extern CoffeePlParms coffeePars[];

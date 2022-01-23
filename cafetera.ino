@@ -6,20 +6,53 @@
 #include <EEPROM.h>
 #include "fsm.h"
 
+#define EEPROM_SIZE 32
+
+//Pulse parameters for each kind of coffee
+//                leche       cafe      choc
+//cafe(1):       (0, 0), (20, 100),   (0, 0)  
+//cortado(2):    (5,20),  (18, 80),   (0, 0)
+//cafeleche(3):  (12,50), (14, 50),   (0, 0)
+//capuccino(4):  (10,40), (12, 30), (18, 30)
+//chocolate(5):  (0, 0),    (0, 0),(60. 100)
+
+//these configuration will be read from eeprom, so it will be overwrite
+CoffeePlParms coffeePars[]={
+  CoffeePlParms (std::make_pair (0, 0), std::make_pair (20, 100), std::make_pair (0, 0)),//0. cafe
+  CoffeePlParms (std::make_pair (5, 20), std::make_pair (18, 80), std::make_pair (0, 0)),//1. cortado
+  CoffeePlParms (std::make_pair (10, 10), std::make_pair (14, 50), std::make_pair (0, 0)), //2. cafemilk
+  CoffeePlParms (std::make_pair (10, 40), std::make_pair (12, 30), std::make_pair (18, 30)),//3. capu
+  CoffeePlParms (std::make_pair (0, 0), std::make_pair (0, 0), std::make_pair (60, 100)) //4. choco
+};
+
 void  writeConf2EEPROM(){
-  EEPROM.begin (EEPROM_SIZE);// initialize EEPROM with predefined size
   Serial.println (__PRETTY_FUNCTION__);
+  // initialize EEPROM with predefined size
+  if (!EEPROM.begin (EEPROM_SIZE)){
+      Serial.println("Failed to initialise EEPROM ERROR!!!!!");
+      Serial.println("Restarting...");
+      delay(1000);
+      ESP.restart();
+  }
   int eeAddress = 0;   //offset we want the data to be put.
   for (int i=0; i< static_cast<int>(CoffeeType::end); ++i){
       EEPROM.put (eeAddress, coffeePars[i]);
+      coffeePars[i].printConf();
       eeAddress += sizeof (coffeePars[0]);
   }
   EEPROM.put (eeAddress, CoffeeMakerFSM::services_num);
+  EEPROM.end();
   delay(100);
 }
 
 void readConfFromEEPROM (){
-  Serial.println ( "__PRETTY_FUNCTION__" );
+  Serial.println (__PRETTY_FUNCTION__);
+  if (!EEPROM.begin (EEPROM_SIZE)){
+      Serial.println("Failed to initialise EEPROM ERROR!!!!!");
+      Serial.println("Restarting...");
+      delay(1000);
+      ESP.restart();
+  }
   int eeAddress = 0; //EEPROM offset to start reading from
   for (int i=0; i < static_cast<int>(CoffeeType::end); ++i){
       EEPROM.get (eeAddress, coffeePars[i]);
@@ -30,7 +63,7 @@ void readConfFromEEPROM (){
 }
 
 void turn_off_all_relays (){
-  Serial.println("turning off all outputs (high level)...");
+  Serial.println (__PRETTY_FUNCTION__);
   digitalWrite (PROD_COFFEE_OUT, HIGH);
   digitalWrite (PROD_MILK_OUT, HIGH);
   digitalWrite (PROD_CHOC_OUT, HIGH);
@@ -46,7 +79,7 @@ void setup () {
   Serial.begin(115200);
   while (!Serial); // wait for serial port to connect. Needed for native USB port only
 
-  Serial.println("__PRETTY_FUNCTION__");
+  Serial.println(__PRETTY_FUNCTION__);
 
   //enable IRQ for pulses
   attachInterrupt (digitalPinToInterrupt(0), CoffeeMakerFSM::ISRCountPulse, RISING);
@@ -74,14 +107,14 @@ void setup () {
 }
 
 void loop() {
+  Serial.println("pulse algun boton");
   turn_off_all_relays ();//apago todo!!!!!!
 
   CoffeeMakerFSM cafetera;
   //Serial.print("loop, services_num: ");
   //Serial.println (services_num);
   //Serial.printl (", ");
-  //delay(10*1000);
   if (digitalRead (BUTTON_1_IN) == LOW)   cafetera.justCoffee ();
 
-  //delay(10*1000);
+  delay(10*1000);
 }

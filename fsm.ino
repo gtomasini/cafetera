@@ -1,21 +1,6 @@
 //fsm implementatation
 #include "fsm.h"
 
-//Pulse parameters for each kind of coffee
-//                leche       cafe      choc
-//cafe(1):       (0, 0), (20, 100),   (0, 0)  
-//cortado(2):    (5,20),  (18, 80),   (0, 0)
-//cafeleche(3):  (12,50), (14, 50),   (0, 0)
-//capuccino(4):  (10,40), (12, 30), (18, 30)
-//chocolate(5):  (0, 0),    (0, 0),(60. 100)
-
-CoffeePlParms coffeePars[]={
-  CoffeePlParms (std::make_pair (0, 0), std::make_pair (20, 100), std::make_pair (0, 0)),//0. cafe
-  CoffeePlParms (std::make_pair (5, 20), std::make_pair (18, 80), std::make_pair (0, 0)),//1. cortado
-  CoffeePlParms (std::make_pair (10, 10), std::make_pair (14, 50), std::make_pair (0, 0)), //2. cafemilk
-  CoffeePlParms (std::make_pair (10, 40), std::make_pair (12, 30), std::make_pair (18, 30)),//3. capu
-  CoffeePlParms (std::make_pair (0, 0), std::make_pair (0, 0), std::make_pair (60, 100)) //4. choco
-};
 
 volatile uint8_t CoffeeMakerFSM::plConter;
 
@@ -34,11 +19,11 @@ bool CoffeePlParms::checkPars(){
       Serial.println ("coffee-h2o pulses conf error!!!");  
       return false;
     }
-    if (choc.second >= choc.first){
+    if (choco.second >= choco.first){
       Serial.println ("choco-h2o pulses conf error!!!");  
       return false;
     }
-    if  (!(milk.first || coffee.first || choc.first)){
+    if  (!(milk.first || coffee.first || choco.first)){
       Serial.println ("not milk, not coffee neither choc pulses conf error!!!");  
       return false;
     }
@@ -55,9 +40,9 @@ void CoffeePlParms::printConf(){
     Serial.print (", ");
     Serial.print (coffee.second);
     Serial.print (", ");
-    Serial.print (choc.first);
+    Serial.print (choco.first);
     Serial.print (", ");
-    Serial.println (choc.second);
+    Serial.println (choco.second);
 }
 
 int CoffeeMakerFSM::prepareCoffee (){
@@ -103,7 +88,7 @@ int CoffeeMakerFSM::prepareCoffee (){
             turn_coffee(LOW); //turn on coffee and h2o
             Serial.println (" pulses, IDLE_ST to COFFEE_ST transition!");
           }
-          else if (parms.choc.first>0){
+          else if (parms.choco.first>0){
               state = CHOC_ST;
               turn_choc(LOW); //turn on choc and h2o
               Serial.println (" pulses, IDLE_ST to CHOC_ST transition!");          
@@ -123,7 +108,7 @@ int CoffeeMakerFSM::prepareCoffee (){
               turn_coffee(LOW); //turn on coffee and h2o
               Serial.println (" pulses, MILK_ST to COFFEE_ST transition!");
             }
-            else if (parms.choc.first>0){
+            else if (parms.choco.first>0){
               state = CHOC_ST;//next state
               turn_choc(LOW); //turn on coffee and h2o
               Serial.println (" pulses, MILK_ST to CHOC_ST transition!");
@@ -145,7 +130,7 @@ int CoffeeMakerFSM::prepareCoffee (){
           if (plConter >= parms.coffee.second){
             turn_coffee(HIGH);  //turn off coffee and h2o
             Serial.print (plConter);
-            if (parms.choc.first>0){
+            if (parms.choco.first>0){
               state = CHOC_ST;
               turn_choc(LOW); //turn on choc and h2o
               Serial.println (" pulses, COFFEE_ST to CHOC_ST transition!");
@@ -164,14 +149,14 @@ int CoffeeMakerFSM::prepareCoffee (){
           break;
 
         case CHOC_ST:
-          if (plConter >= parms.choc.second){
+          if (plConter >= parms.choco.second){
             state = END_ST;
             plConter = 0;
             turn_choc(HIGH);
             Serial.print (plConter);
             Serial.println (" pulses, NO_CHOC_ST to END_ST transition");
           }
-          else if (plConter >= parms.choc.first){
+          else if (plConter >= parms.choco.first){
             digitalWrite (PROD_CHOC_OUT, HIGH); //turn off choc
             Serial.print (plConter);
             Serial.println (" pulses, (choc-thr reached)");
