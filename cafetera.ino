@@ -60,6 +60,8 @@ void readConfFromEEPROM (){
       coffeePars[i].printConf();
   }
   EEPROM.get (eeAddress, CoffeeMakerFSM::services_num);
+  Serial.print ("*** services num: ");
+  Serial.println (CoffeeMakerFSM::services_num);
 }
 
 void turn_off_all_relays (){
@@ -102,11 +104,11 @@ void setup () {
   //writeConf2EEPROM();//just the first time or after reconfiguration
   delay (1000);
   readConfFromEEPROM();
-  Serial.print ("*** services num: ");
-  Serial.println (CoffeeMakerFSM::services_num);
   Serial.println("pulse algun boton para cafe...");
 }
 
+//available serial commands: 
+//cafe; cortado; cappucciono;
 void loop() {
   //turn_off_all_relays ();//apago todo!!!!!!
   static String serialBuffer;
@@ -128,5 +130,8 @@ void loop() {
   //Serial.println (services_num);
   //Serial.printl (", ");
   if (digitalRead (BUTTON_1_IN) == LOW || cmd.equals("cafe") )   cafetera.justCoffee ();
+  else if (cmd.equals("cortado") cafetera.cortado ();
+  else if (cmd.equals("capuccino") cafetera.ccapuccino ();
+  else if (cmd.length()>0) Serial.println("command error!");
   delay(1*1000);
 }

@@ -183,7 +183,7 @@ int CoffeeMakerFSM::prepareCoffee (){
       }
     }
     Serial.println ("ERROR, it must no pass here!");
-    return 0;//no deberia salir por aqui
+    return 0;//it shall not return here
 }
 
 int CoffeeMakerFSM::justCoffee (){
@@ -198,7 +198,7 @@ int CoffeeMakerFSM::cortado (){
    return prepareCoffee ();
 }
 
-int CoffeeMakerFSM::capuccino(){
+int CoffeeMakerFSM::capuccino (){
    parms = coffeePars[static_cast<int>(CoffeeType::capu)];
    Serial.println ("*** calling for a capuccino ***");
    return prepareCoffee ();
